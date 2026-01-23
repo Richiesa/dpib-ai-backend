@@ -1,38 +1,48 @@
+const knowledge = require("./knowledge");
+
 module.exports = (req, res) => {
-  // ===== CORS HEADER (WAJIB) =====
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight request
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  const { message } = req.query;
+  const message = (req.query.message || "").toLowerCase();
 
   if (!message) {
-    return res.status(400).json({
-      reply: "Pesan tidak boleh kosong."
+    return res.json({
+      reply: "Silakan masukkan pertanyaan seputar konstruksi bangunan."
     });
   }
 
-  const text = message.toLowerCase();
-  let reply = "Pertanyaan di luar ruang lingkup konstruksi DPIB.";
+  let results = [];
 
-  if (text.includes("rab")) {
-    reply =
-      "RAB (Rencana Anggaran Biaya) adalah perhitungan biaya konstruksi yang mencakup material, upah, dan pekerjaan.";
-  } else if (text.includes("kolom")) {
-    reply =
-      "Kolom adalah elemen struktur tekan vertikal yang menyalurkan beban ke pondasi.";
-  } else if (text.includes("render")) {
-    reply =
-      "Rendering digunakan untuk menampilkan visual bangunan secara realistis.";
-  } else if (text.includes("drafting")) {
-    reply =
-      "Drafting adalah proses penggambaran teknis bangunan sesuai standar kerja.";
+  for (const item of knowledge) {
+    for (const key of item.keywords) {
+      if (message.includes(key)) {
+        results.push(item);
+        break;
+      }
+    }
   }
 
-  res.status(200).json({ reply });
+  if (results.length === 0) {
+    return res.json({
+      reply:
+        "Pertanyaan ini berkaitan dengan konstruksi bangunan, namun belum tersedia penjelasan terstruktur di basis pengetahuan saya."
+    });
+  }
+
+  let reply = "Penjelasan dapat diuraikan sebagai berikut:\n\n";
+
+  results.forEach((item, index) => {
+    reply += `${index + 1}. ${item.title}\n${item.explanation}\n\n`;
+  });
+
+  reply +=
+    "Dengan memahami setiap bagian tersebut, sistem konstruksi bangunan dapat direncanakan dan dilaksanakan secara aman dan efisien.";
+
+  res.json({ reply });
 };
