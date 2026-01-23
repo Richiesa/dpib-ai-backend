@@ -8,7 +8,7 @@ module.exports = (req, res) => {
   }
 
   const text = message.toLowerCase();
-  let reply = "Maaf, pertanyaan belum dapat saya pahami. Silakan gunakan istilah konstruksi.";
+  let reply = "Maaf, pertanyaan ini diluar konteks konstruksi. Saya sebagai asisten DPIB hanya melayani pertanyaan seputar konstruksi.";
 
   // ===== RAB =====
   if (text.includes("rab")) {
@@ -57,6 +57,11 @@ module.exports = (req, res) => {
     reply =
       "SketchUp digunakan untuk pemodelan 3D bangunan sebelum dilakukan rendering.";
   }
+  if (text.length < 5) {
+  reply = "Mohon jelaskan pertanyaan dengan lebih lengkap.";
+  }
+
 
   res.status(200).json({ reply });
 };
+
