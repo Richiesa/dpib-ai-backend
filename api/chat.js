@@ -7,28 +7,56 @@ module.exports = (req, res) => {
     });
   }
 
-  let response = "Pertanyaan belum dikenali.";
-
   const text = message.toLowerCase();
+  let reply = "Maaf, pertanyaan belum dapat saya pahami. Silakan gunakan istilah konstruksi.";
 
+  // ===== RAB =====
   if (text.includes("rab")) {
-    response =
-      "RAB (Rencana Anggaran Biaya) adalah perhitungan biaya konstruksi yang mencakup pekerjaan, material, dan upah tenaga kerja.";
-  } 
-  else if (text.includes("kolom")) {
-    response =
-      "Kolom berfungsi sebagai elemen struktur tekan yang menyalurkan beban dari balok ke pondasi.";
-  } 
-  else if (text.includes("render")) {
-    response =
-      "Rendering digunakan untuk menampilkan visual bangunan secara realistis menggunakan software seperti SketchUp, Lumion, atau Enscape.";
-  } 
-  else if (text.includes("drafting")) {
-    response =
-      "Drafting adalah proses penggambaran teknis bangunan secara detail, baik 2D maupun 3D.";
+    reply =
+      "RAB (Rencana Anggaran Biaya) adalah perhitungan total biaya konstruksi yang meliputi pekerjaan persiapan, struktur, arsitektur, MEP, material, dan upah tenaga kerja.";
+  }
+  else if (text.includes("analisa harga satuan")) {
+    reply =
+      "Analisa Harga Satuan Pekerjaan (AHSP) digunakan untuk menentukan biaya satu item pekerjaan berdasarkan koefisien tenaga, bahan, dan alat.";
+  }
+  else if (text.includes("volume pekerjaan")) {
+    reply =
+      "Volume pekerjaan dihitung berdasarkan gambar kerja, misalnya panjang × lebar × tinggi atau luas × tebal, sesuai jenis pekerjaannya.";
   }
 
-  res.status(200).json({
-    reply: response
-  });
+  // ===== STRUKTUR =====
+  else if (text.includes("kolom")) {
+    reply =
+      "Kolom merupakan elemen struktur tekan vertikal yang berfungsi menyalurkan beban dari balok dan pelat menuju pondasi.";
+  }
+  else if (text.includes("balok")) {
+    reply =
+      "Balok berfungsi menahan beban lentur dan meneruskannya ke kolom. Balok umumnya bekerja bersama pelat lantai.";
+  }
+  else if (text.includes("pondasi")) {
+    reply =
+      "Pondasi berfungsi meneruskan beban bangunan ke tanah. Jenis pondasi ditentukan oleh beban bangunan dan daya dukung tanah.";
+  }
+
+  // ===== DRAFTING =====
+  else if (text.includes("drafting")) {
+    reply =
+      "Drafting adalah proses penggambaran teknis bangunan secara detail menggunakan standar gambar, skala, dan notasi yang jelas.";
+  }
+  else if (text.includes("autocad")) {
+    reply =
+      "AutoCAD digunakan untuk membuat gambar kerja 2D seperti denah, tampak, potongan, dan detail konstruksi.";
+  }
+
+  // ===== RENDERING =====
+  else if (text.includes("render") || text.includes("rendering")) {
+    reply =
+      "Rendering digunakan untuk menampilkan visual bangunan secara realistis dengan pencahayaan, material, dan lingkungan.";
+  }
+  else if (text.includes("sketchup")) {
+    reply =
+      "SketchUp digunakan untuk pemodelan 3D bangunan sebelum dilakukan rendering.";
+  }
+
+  res.status(200).json({ reply });
 };
