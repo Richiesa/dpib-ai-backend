@@ -1,48 +1,39 @@
-const knowledge = require("./knowledge");
-
-module.exports = (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const message = (req.query.message || "").toLowerCase();
+  const { question } = req.body;
 
-  if (!message) {
-    return res.json({
-      reply: "Silakan masukkan pertanyaan seputar konstruksi bangunan."
-    });
-  }
-
-  let results = [];
-
-  for (const item of knowledge) {
-    for (const key of item.keywords) {
-      if (message.includes(key)) {
-        results.push(item);
-        break;
-      }
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
+      process.env.GEMINI_API_KEY,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text:
+                  "Kamu adalah asisten AI konstruksi jurusan DPIB. Jawablah dengan bahasa Indonesia yang sopan dan edukatif.\n\nPertanyaan:\n" +
+                  question
+              }
+            ]
+          }
+        ]
+      })
     }
-  }
+  );
 
-  if (results.length === 0) {
-    return res.json({
-      reply:
-        "Pertanyaan ini berkaitan dengan konstruksi bangunan, namun belum tersedia penjelasan terstruktur di basis pengetahuan saya."
-    });
-  }
+  const data = await response.json();
 
-  let reply = "Penjelasan dapat diuraikan sebagai berikut:\n\n";
+  const answer =
+    data.candidates?.[0]?.content?.parts?.[0]?.text ||
+    "Maaf, saya belum dapat menjawab pertanyaan tersebut.";
 
-  results.forEach((item, index) => {
-    reply += `${index + 1}. ${item.title}\n${item.explanation}\n\n`;
-  });
-
-  reply +=
-    "Dengan memahami setiap bagian tersebut, sistem konstruksi bangunan dapat direncanakan dan dilaksanakan secara aman dan efisien.";
-
-  res.json({ reply });
-};
+  res.status(200).json({ answer });
+}
