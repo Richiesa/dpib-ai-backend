@@ -31,23 +31,31 @@ export default async function handler(req, res) {
           Authorization: `Bearer ${process.env.HF_API_KEY}`
         },
         body: JSON.stringify({
-          inputs: `Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik.\n\nPertanyaan: ${message}\n\nJawaban:`
+          inputs: `Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik.\n\nPertanyaan: ${message}\n\nJawaban:`,
+          options: {
+            wait_for_model: true
+          }
         })
       }
     );
 
     const data = await hfRes.json();
 
-    // 🔑 Parsing aman HuggingFace
-    const reply =
-      Array.isArray(data) && data[0]?.generated_text
-        ? data[0].generated_text.replace(/.*Jawaban:/s, "").trim()
-        : null;
+    // ===== PARSING PALING AMAN =====
+    let reply = null;
+
+    if (Array.isArray(data) && data[0]?.generated_text) {
+      reply = data[0].generated_text
+        .replace(/.*Jawaban:/s, "")
+        .trim();
+    } else if (data.generated_text) {
+      reply = data.generated_text;
+    }
 
     if (!reply) {
-      console.log("HF RESPONSE:", JSON.stringify(data));
+      console.log("HF RAW RESPONSE:", JSON.stringify(data));
       return res.status(200).json({
-        reply: "AI aktif, namun belum memberikan jawaban."
+        reply: "Model sedang memuat, silakan ulangi pertanyaan."
       });
     }
 
