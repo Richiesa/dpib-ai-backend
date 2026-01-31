@@ -34,7 +34,7 @@ export default async function handler(req, res) {
           "X-Title": "DPIB AI Assistant"
         },
         body: JSON.stringify({
-          model: "mistralai/mistral-7b-instruct:free",
+          model: "qwen/qwen3-next-80b-a3b-instruct:free",
           messages: [
             {
               role: "system",
@@ -73,4 +73,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
 
