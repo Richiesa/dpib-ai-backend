@@ -2,7 +2,6 @@ const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 export default async function handler(req, res) {
-  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -10,7 +9,6 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
-  // ===============
 
   if (req.method !== "POST") {
     return res.status(405).json({ reply: "Method tidak diizinkan." });
@@ -22,40 +20,41 @@ export default async function handler(req, res) {
   }
 
   try {
-    const hfRes = await fetch(
-      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.HF_API_KEY}`
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://richiesa.github.io",
+          "X-Title": "DPIB AI Assistant"
         },
         body: JSON.stringify({
-          inputs: `Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik.\n\nPertanyaan: ${message}\n\nJawaban:`,
-          options: {
-            wait_for_model: true
-          }
+          model: "meta-llama/llama-3.1-8b-instruct:free",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik."
+            },
+            {
+              role: "user",
+              content: message
+            }
+          ],
+          temperature: 0.4
         })
       }
     );
 
-    const data = await hfRes.json();
-
-    // ===== PARSING PALING AMAN =====
-    let reply = null;
-
-    if (Array.isArray(data) && data[0]?.generated_text) {
-      reply = data[0].generated_text
-        .replace(/.*Jawaban:/s, "")
-        .trim();
-    } else if (data.generated_text) {
-      reply = data.generated_text;
-    }
+    const data = await response.json();
+    const reply = data?.choices?.[0]?.message?.content;
 
     if (!reply) {
-      console.log("HF RAW RESPONSE:", JSON.stringify(data));
+      console.log("OPENROUTER RAW:", JSON.stringify(data));
       return res.status(200).json({
-        reply: "Model sedang memuat, silakan ulangi pertanyaan."
+        reply: "AI aktif namun belum memberikan jawaban."
       });
     }
 
