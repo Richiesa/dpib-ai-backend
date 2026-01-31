@@ -1,7 +1,10 @@
 {
   "name": "dpib-ai-backend",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node api/chat.js"
+  },
   "dependencies": {
     "node-fetch": "^3.3.2"
   }
