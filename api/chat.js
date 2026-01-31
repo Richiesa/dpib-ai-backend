@@ -17,14 +17,12 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    if (!message || message.length < 2) {
-      return res.status(400).json({
-        reply: "Pertanyaan terlalu singkat.",
-      });
+    if (!message) {
+      return res.status(400).json({ reply: "Pesan kosong." });
     }
 
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" +
         process.env.GEMINI_API_KEY,
       {
         method: "POST",
@@ -32,12 +30,11 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [
             {
-              role: "user",
               parts: [
                 {
                   text:
-                    "Kamu adalah asisten AI khusus bidang konstruksi bangunan (DPIB). " +
-                    "Jawab pertanyaan secara teknis, jelas, dan edukatif.\n\n" +
+                    "Kamu adalah asisten AI bidang konstruksi bangunan (DPIB). " +
+                    "Jawab dengan bahasa teknis, jelas, dan mudah dipahami.\n\n" +
                     message,
                 },
               ],
@@ -47,27 +44,16 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await geminiResponse.json();
+    const data = await response.json();
 
-    // DEBUG LOG (PENTING)
-    console.log("Gemini raw response:", JSON.stringify(data));
-
-    let reply = "Maaf, AI belum dapat memberikan jawaban.";
-
-    if (
-      data.candidates &&
-      data.candidates.length > 0 &&
-      data.candidates[0].content &&
-      data.candidates[0].content.parts &&
-      data.candidates[0].content.parts.length > 0
-    ) {
-      reply = data.candidates[0].content.parts[0].text;
-    }
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ??
+      "Maaf, AI belum dapat memberikan jawaban.";
 
     return res.status(200).json({ reply });
-  } catch (err) {
+  } catch (error) {
     return res.status(500).json({
-      reply: "Terjadi kesalahan saat memproses AI.",
+      reply: "Terjadi kesalahan pada server AI.",
     });
   }
 }
