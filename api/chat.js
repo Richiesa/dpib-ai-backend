@@ -1,11 +1,11 @@
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ reply: "Method tidak diizinkan." });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const question = req.query.message;
+  const { question } = req.body;
   if (!question) {
-    return res.status(400).json({ reply: "Pertanyaan kosong." });
+    return res.status(400).json({ error: "Pertanyaan kosong" });
   }
 
   try {
@@ -21,8 +21,8 @@ export default async function handler(req, res) {
               parts: [
                 {
                   text:
-                    "Kamu adalah AI konstruksi (DPIB). " +
-                    "Jawab singkat, jelas, dan praktis.\n\n" +
+                    "Kamu adalah AI konstruksi DPIB. " +
+                    "Jawab ringkas, teknis, dan profesional.\n\n" +
                     question
                 }
               ]
@@ -34,14 +34,12 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ??
-      "Maaf, AI belum bisa menjawab.";
+    const answer =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Maaf, AI belum dapat menjawab.";
 
-    res.status(200).json({ reply });
+    res.status(200).json({ answer });
   } catch (err) {
-    res.status(500).json({
-      reply: "AI sedang sibuk, silakan coba lagi."
-    });
+    res.status(500).json({ error: "Gagal menghubungi Gemini API" });
   }
 }
