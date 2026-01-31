@@ -1,4 +1,8 @@
 {
-  "name": "dpib-ai-api",
-  "version": "1.0.0"
+  "name": "dpib-ai-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
 }
