@@ -1,55 +1,73 @@
 import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-  // === CORS HEADER (PALING PENTING) ===
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Handle preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ reply: "Method tidak diizinkan." });
   }
 
   try {
     const { message } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ reply: "Pesan kosong." });
+    if (!message || message.length < 2) {
+      return res.status(400).json({
+        reply: "Pertanyaan terlalu singkat.",
+      });
     }
 
-    const response = await fetch(
+    const geminiResponse = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
         process.env.GEMINI_API_KEY,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: message }],
+              role: "user",
+              parts: [
+                {
+                  text:
+                    "Kamu adalah asisten AI khusus bidang konstruksi bangunan (DPIB). " +
+                    "Jawab pertanyaan secara teknis, jelas, dan edukatif.\n\n" +
+                    message,
+                },
+              ],
             },
           ],
         }),
       }
     );
 
-    const data = await response.json();
+    const data = await geminiResponse.json();
 
-    const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Maaf, AI tidak dapat memberikan jawaban.";
+    // DEBUG LOG (PENTING)
+    console.log("Gemini raw response:", JSON.stringify(data));
+
+    let reply = "Maaf, AI belum dapat memberikan jawaban.";
+
+    if (
+      data.candidates &&
+      data.candidates.length > 0 &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts.length > 0
+    ) {
+      reply = data.candidates[0].content.parts[0].text;
+    }
 
     return res.status(200).json({ reply });
-  } catch (error) {
+  } catch (err) {
     return res.status(500).json({
-      reply: "Terjadi kesalahan pada server.",
+      reply: "Terjadi kesalahan saat memproses AI.",
     });
   }
 }
