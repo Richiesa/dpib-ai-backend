@@ -1,4 +1,13 @@
 export default async function handler(req, res) {
+  // ===== CORS =====
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -21,8 +30,8 @@ export default async function handler(req, res) {
               parts: [
                 {
                   text:
-                    "Kamu adalah AI konstruksi DPIB. " +
-                    "Jawab ringkas, teknis, dan profesional.\n\n" +
+                    "Kamu adalah AI konstruksi untuk jurusan DPIB. " +
+                    "Jawab singkat, jelas, dan profesional.\n\n" +
                     question
                 }
               ]
@@ -36,7 +45,7 @@ export default async function handler(req, res) {
 
     const answer =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Maaf, AI belum dapat menjawab.";
+      "Maaf, AI belum bisa menjawab.";
 
     res.status(200).json({ answer });
   } catch (err) {
