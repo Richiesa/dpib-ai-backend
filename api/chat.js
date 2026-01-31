@@ -18,20 +18,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(
+    const geminiResponse = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
         process.env.GEMINI_API_KEY,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
           contents: [
             {
+              role: "user",
               parts: [
                 {
                   text:
-                    "Kamu adalah AI konstruksi untuk jurusan DPIB. " +
-                    "Jawab singkat, jelas, dan profesional.\n\n" +
+                    "Kamu adalah asisten AI jurusan DPIB (Desain Pemodelan dan Informasi Bangunan). " +
+                    "Jawab pertanyaan konstruksi secara singkat, jelas, dan edukatif.\n\n" +
                     question
                 }
               ]
@@ -41,14 +44,17 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
+    const data = await geminiResponse.json();
 
+    // ===== DEBUG AMAN (jika Gemini kosong) =====
     const answer =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Maaf, AI belum bisa menjawab.";
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Maaf, AI belum dapat menjawab pertanyaan tersebut.";
 
     res.status(200).json({ answer });
-  } catch (err) {
-    res.status(500).json({ error: "Gagal menghubungi Gemini API" });
+  } catch (error) {
+    res.status(500).json({
+      answer: "Terjadi kesalahan saat menghubungi AI."
+    });
   }
 }
