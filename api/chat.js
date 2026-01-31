@@ -24,12 +24,12 @@ export default async function handler(req, res) {
               parts: [
                 {
                   text:
-                    "Kamu adalah asisten AI konstruksi bangunan jurusan DPIB. " +
-                    "Jawablah dengan bahasa Indonesia yang sopan, edukatif, dan mudah dipahami siswa. " +
-                    "Fokus pada struktur bangunan, RAB, gambar kerja, drafting, dan proses konstruksi. " +
-                    "Jangan memberikan perhitungan teknis detail.\n\n" +
+                    "Kamu adalah asisten AI konstruksi jurusan DPIB. " +
+                    "Jawab secara ringkas, jelas, dan maksimal 5 paragraf pendek. " +
+                    "Gunakan bahasa Indonesia yang sopan dan mudah dipahami siswa. " +
+                    "Fokus pada konsep, bukan perhitungan teknis.\n\n" +
                     "Pertanyaan:\n" +
-                    question
+           question
                 }
               ]
             }
@@ -49,3 +49,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
 }
+
