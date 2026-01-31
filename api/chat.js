@@ -1,8 +1,8 @@
 const fetch = (...args) =>
-  import('node-fetch').then(({ default: fetch }) => fetch(...args));
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 export default async function handler(req, res) {
-  // ===== CORS WAJIB =====
+  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
-  // =====================
+  // ===============
 
   if (req.method !== "POST") {
     return res.status(405).json({ reply: "Method tidak diizinkan." });
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(
+    const groqRes = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
@@ -38,20 +38,36 @@ export default async function handler(req, res) {
               content:
                 "Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik."
             },
-            { role: "user", content: message }
-          ]
+            {
+              role: "user",
+              content: message
+            }
+          ],
+          temperature: 0.4
         })
       }
     );
 
-    const data = await response.json();
+    const data = await groqRes.json();
 
-    return res.status(200).json({
-      reply:
-        data.choices?.[0]?.message?.content ||
-        "AI tidak dapat memberikan jawaban."
-    });
+    // 🔑 PARSING AMAN
+    const reply =
+      data &&
+      data.choices &&
+      data.choices.length > 0 &&
+      data.choices[0].message &&
+      data.choices[0].message.content;
+
+    if (!reply) {
+      console.log("Groq response:", JSON.stringify(data));
+      return res
+        .status(200)
+        .json({ reply: "AI tidak dapat memberikan jawaban (response kosong)." });
+    }
+
+    return res.status(200).json({ reply });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       reply: "Terjadi kesalahan server AI."
     });
