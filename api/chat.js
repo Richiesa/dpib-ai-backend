@@ -22,45 +22,36 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
+    const hfRes = await fetch(
+      "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.GROQ_API_KEY}`
+          Authorization: `Bearer ${process.env.HF_API_KEY}`
         },
         body: JSON.stringify({
-          model: "llama3-8b-8192",
-          messages: [
-            {
-              role: "system",
-              content:
-                "Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik."
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          temperature: 0.3
+          inputs: `Kamu adalah asisten AI jurusan DPIB yang ahli konstruksi bangunan, struktur, RAB, dan gambar teknik.\n\nPertanyaan: ${message}\n\nJawaban:`
         })
       }
     );
 
-    const data = await response.json();
+    const data = await hfRes.json();
 
-    if (!data.choices || !data.choices[0]?.message?.content) {
-      console.log("FULL GROQ RESPONSE:", JSON.stringify(data));
+    // 🔑 Parsing aman HuggingFace
+    const reply =
+      Array.isArray(data) && data[0]?.generated_text
+        ? data[0].generated_text.replace(/.*Jawaban:/s, "").trim()
+        : null;
+
+    if (!reply) {
+      console.log("HF RESPONSE:", JSON.stringify(data));
       return res.status(200).json({
-        reply:
-          "AI backend aktif, namun model belum mengembalikan jawaban."
+        reply: "AI aktif, namun belum memberikan jawaban."
       });
     }
 
-    return res.status(200).json({
-      reply: data.choices[0].message.content
-    });
+    return res.status(200).json({ reply });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
