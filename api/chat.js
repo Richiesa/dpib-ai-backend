@@ -10,33 +10,37 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Pertanyaan kosong" });
     }
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
-        process.env.GEMINI_API_KEY,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [
+   const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 12000); // 12 detik
+
+const response = await fetch(
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
+    process.env.GEMINI_API_KEY,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal: controller.signal,
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
             {
-              parts: [
-                {
-                  text:
-                    "Kamu adalah asisten AI konstruksi jurusan DPIB. " +
-                    "Jawab secara ringkas, jelas, dan maksimal 5 paragraf pendek. " +
-                    "Gunakan bahasa Indonesia yang sopan dan mudah dipahami siswa. " +
-                    "Fokus pada konsep, bukan perhitungan teknis.\n\n" +
-                    "Pertanyaan:\n" +
-           question
-                }
-              ]
+              text:
+                "Kamu adalah asisten AI konstruksi jurusan DPIB. " +
+                "Jawab secara ringkas, jelas, dan maksimal 5 paragraf pendek. " +
+                "Gunakan bahasa Indonesia yang sopan dan edukatif.\n\n" +
+                "Pertanyaan:\n" +
+                question
             }
           ]
-        })
-      }
-    );
+        }
+      ]
+    })
+  }
+);
+
+clearTimeout(timeout);
+
 
     const data = await response.json();
 
@@ -48,5 +52,12 @@ export default async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
+}
+
+catch (error) {
+  res.status(504).json({
+    answer:
+      "Maaf, AI sedang sibuk. Silakan ulangi pertanyaan dalam beberapa saat."
+  });
 }
 
