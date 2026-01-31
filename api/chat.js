@@ -2,6 +2,7 @@ const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 export default async function handler(req, res) {
+  // ===== CORS =====
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -9,6 +10,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+  // ===============
 
   if (req.method !== "POST") {
     return res.status(405).json({ reply: "Method tidak diizinkan." });
@@ -25,8 +27,9 @@ export default async function handler(req, res) {
       {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Accept": "application/json",
           "HTTP-Referer": "https://richiesa.github.io",
           "X-Title": "DPIB AI Assistant"
         },
@@ -43,26 +46,30 @@ export default async function handler(req, res) {
               content: message
             }
           ],
-          temperature: 0.4
+          max_tokens: 512,
+          temperature: 0.4,
+          stream: false
         })
       }
     );
 
     const data = await response.json();
+
+    console.log("OPENROUTER RESPONSE:", JSON.stringify(data));
+
     const reply = data?.choices?.[0]?.message?.content;
 
     if (!reply) {
-      console.log("OPENROUTER RAW:", JSON.stringify(data));
       return res.status(200).json({
-        reply: "AI aktif namun belum memberikan jawaban."
+        reply: "AI backend aktif, namun model belum mengembalikan jawaban."
       });
     }
 
     return res.status(200).json({ reply });
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error("AI ERROR:", error);
     return res.status(500).json({
-      reply: "Terjadi kesalahan server AI."
+      reply: "Terjadi kesalahan pada server AI."
     });
   }
 }
